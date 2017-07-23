@@ -1,0 +1,22 @@
+HybridDialogModel/embedding:0 ->num_params:  6.0Mi
+HybridDialogModel/token_encoder_lstm/myLSTMCell/Linear/Matrix:0 ->num_params:  5.2Mi
+HybridDialogModel/token_encoder_lstm/myLSTMCell/Linear/Bias:0 ->num_params:  4.0Ki
+HybridDialogModel/token_encoder_lstm/myLSTMCell/W_F_diag:0 ->num_params:  1.0Ki
+HybridDialogModel/token_encoder_lstm/myLSTMCell/W_I_diag:0 ->num_params:  1.0Ki
+HybridDialogModel/token_encoder_lstm/myLSTMCell/W_O_diag:0 ->num_params:  1.0Ki
+HybridDialogModel/turn_encoder_lstm/myLSTMCell/Linear/Matrix:0 ->num_params:  3.0Mi
+HybridDialogModel/turn_encoder_lstm/myLSTMCell/Linear/Bias:0 ->num_params:  2.0Ki
+HybridDialogModel/turn_encoder_lstm/myLSTMCell/W_F_diag:0 ->num_params:  500.0
+HybridDialogModel/turn_encoder_lstm/myLSTMCell/W_I_diag:0 ->num_params:  500.0
+HybridDialogModel/turn_encoder_lstm/myLSTMCell/W_O_diag:0 ->num_params:  500.0
+HybridDialogModel/decoder_lstm/myLSTMCell/Linear/Matrix:0 ->num_params:  22.4Mi
+HybridDialogModel/decoder_lstm/myLSTMCell/Linear/Bias:0 ->num_params:  8.0Ki
+HybridDialogModel/decoder_lstm/myLSTMCell/W_F_diag:0 ->num_params:  2.0Ki
+HybridDialogModel/decoder_lstm/myLSTMCell/W_I_diag:0 ->num_params:  2.0Ki
+HybridDialogModel/decoder_lstm/myLSTMCell/W_O_diag:0 ->num_params:  2.0Ki
+HybridDialogModel/output_layer/fully_connected/weights:0 ->num_params:  1.0Mi
+HybridDialogModel/output_layer/fully_connected/biases:0 ->num_params:  500.0
+HybridDialogModel/output_layer/fully_connected_1/weights:0 ->num_params:  10.0Mi
+HybridDialogModel/output_layer/fully_connected_1/biases:0 ->num_params:  20.0Ki
+Total_params : 47.6Mi
+                   
