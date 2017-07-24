@@ -70,11 +70,13 @@ class SSFetcher(threading.Thread):
 class SSIterator(object):
     def __init__(self,
                  batch_size,
+                 max_caption_length,
                  seed,
                  use_infinite_loop=True,
                  dtype="int32"):
 
         self.batch_size = batch_size
+        self.max_caption_length = max_caption_length
 
         args = locals()
         args.pop("self")
