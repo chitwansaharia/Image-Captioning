@@ -55,24 +55,34 @@ def default_config():
     config.max_token_per_utr = 100
     return config
 
-def hybrid_config():
+# def hybrid_config():
+#     config = default_config()
+#     config.vocab_size = 20000
+#     config.decoder_units = 2000
+#     config.turn_encoder_units = 500
+#     config.token_encoder_units = 1000
+#     config.use_infinite_loop = False
+#     config.seed = 1234
+#     config.iters_per_epoch = 5000
+#     config.num_penultimate = 500
+#     config.reader = "wiki.wiki_reader"
+#     config.save_path = "hybrid/default/"
+#     config.data_path_train = 'Data/100/Train_modified.pkl'
+#     config.data_path_valid = 'Data/100/Valid_modified.pkl'
+#     config.model = "end_to_end_dialog_model.HybridDialogModel"
+#     config.load_mode = "continue"
+#     config.learning_rate = 0.0002
+#     return config
+
+def image_caption_config():
     config = default_config()
-    config.vocab_size = 20000
+    config.batch_size  = 60
+    config.max_tokens_per_caption = 50
     config.decoder_units = 2000
-    config.turn_encoder_units = 500
-    config.token_encoder_units = 1000
-    config.use_infinite_loop = False
-    config.seed = 1234
-    config.iters_per_epoch = 5000
-    config.num_penultimate = 500
-    config.reader = "wiki.wiki_reader"
-    config.save_path = "hybrid/default/"
-    config.data_path_train = 'Data/100/Train_modified.pkl'
-    config.data_path_valid = 'Data/100/Valid_modified.pkl'
-    config.model = "end_to_end_dialog_model.HybridDialogModel"
-    config.load_mode = "continue"
-    config.learning_rate = 0.0002
+    config.vocab_size = 15000
+    config.input_size = 300
     return config
+
 
 def hybrid_attention_config():
     config = hybrid_config()
@@ -103,11 +113,12 @@ def hybrid_config_3():
 def config():
     config = config_container()
     config.dialog = hybrid_config()
-    config.hybrid_config_1 = hybrid_config_1()
-    config.hybrid_config_2 = hybrid_config_2()
-    config.hybrid_config_3 = hybrid_config_3()
-    config.attn = hybrid_attention_config()
+    # config.hybrid_config_1 = hybrid_config_1()
+    # config.hybrid_config_2 = hybrid_config_2()
+    # config.hybrid_config_3 = hybrid_config_3()
+    # config.attn = hybrid_attention_config()
     config.sampler = sampler_config()
+    config.image = image_caption_config()
     return config
 
 

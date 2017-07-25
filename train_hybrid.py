@@ -11,8 +11,9 @@ import tensorflow as tf
 
 import sys
 import os
-from models import end_to_end_dialog_model
+from models import image_captioning_model
 from data_readers import ptb, wiki
+from train_iter import *
 import imp
 import Data_iter
 import pdb
@@ -20,8 +21,8 @@ import pdb
 flags = tf.flags
 logging = tf.logging
 
-flags.DEFINE_string("config", "1",
-                    "config params for the model")
+# flags.DEFINE_string("config", "1",
+#                     "config params for the model")
 flags.DEFINE_string("save_path", None,
                     "base save path for the experiment")
 flags.DEFINE_string("eval_only", "False",
@@ -32,12 +33,12 @@ flags.DEFINE_string("log_path",None,"Log Directory path")
 FLAGS = flags.FLAGS
 
 
-if FLAGS.config == '1':
-    dial_config = imp.load_source('config', 'config/config.py').config().hybrid_config_1
-elif FLAGS.config == '2':
-    dial_config = imp.load_source('config', 'config/config.py').config().hybrid_config_2
-elif FLAGS.config == '3':
-    dial_config = imp.load_source('config', 'config/config.py').config().hybrid_config_3
+# if FLAGS.config == '1':
+#     model_config = imp.load_source('config', 'config/config.py').config().config_1
+# elif FLAGS.config == '2':
+#     model_config = imp.load_source('config', 'config/config.py').config().config_2
+# elif FLAGS.config == '3':
+#     model_config = imp.load_source('config', 'config/config.py').config().config_3
 
 
 
@@ -45,21 +46,21 @@ def main(_):
     assert(FLAGS.save_path)
     # sent_config = imp.load_source('config', FLAGS.config).config().lm
 
-    # dial_config = imp.load_source('config', 'config/config.py').config().dialog
+    model_config = imp.load_source('config', 'config/config.py').config().image
 
     print("Config :")
-    print(dial_config)
+    print(model_config)
     print("\n")
 
-    save_path = os.path.join(FLAGS.save_path, dial_config.save_path)
+    save_path = os.path.join(FLAGS.save_path, model_config.save_path)
     log_path = os.path.join(FLAGS.log_path,'hybrid_log')
 
     with tf.Graph().as_default():
-        main_model = eval(dial_config.model)(dial_config)
+        main_model = eval(model_config.model)(model_config)
         # pdb.set_trace()
         # sent_model = eval(sent_config.model)(sent_config,None)
 
-        if dial_config.load_mode == "continue":
+        if model_config.load_mode == "continue":
             if not tf.gfile.Exists(save_path):
                 os.makedirs(save_path)
                 os.chmod(save_path, 0775)
@@ -90,27 +91,29 @@ def main(_):
                     sess=session,
                     save_path=os.path.join(save_path, "best_model.ckpt"))
 
+
             i, patience = 0, 0
             best_valid_metric = 1e10
 
             while patience < dial_config.patience and not eval(FLAGS.eval_only):
                 i += 1
-                train_reader = Data_iter.get_train_iterator(dial_config)
-                valid_reader = Data_iter.get_validation_iterator(dial_config)
+                # train_reader = Data_iter.get_train_iterator(dial_config)
+                # valid_reader = Data_iter.get_validation_iterator(dial_config)
+                iterator = SSIterator(model_config.batch_size,model_config.max_tokens_per_caption,1234)
                 print("\nEpoch: %d" % (i))
-                main_model.run_epoch(session, reader = train_reader, is_training=True, verbose=True)
+                main_model.run_epoch(session, reader = iterator, is_training=True, verbose=True)
 
-                valid_metrics = main_model.run_epoch(session, reader = valid_reader, verbose=True)
+                # valid_metrics = main_model.run_epoch(session, reader = valid_reader, verbose=True)
 
-                if best_valid_metric > valid_metrics["loss"]:
-                    best_valid_metric = valid_metrics["loss"]
+                # if best_valid_metric > valid_metrics["loss"]:
+                #     best_valid_metric = valid_metrics["loss"]
 
-                    print("\nsaving best model...")
-                    sv.saver.save(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
-                    patience = 0
-                else:
-                    patience += 1
-                    print("\nLosing patience...")
+                #     print("\nsaving best model...")
+                #     sv.saver.save(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
+                #     patience = 0
+                # else:
+                #     patience += 1
+                #     print("\nLosing patience...")
 
             # print("\nLoading best model and Evaluating with Test set...")
             # sv.saver.restore(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
