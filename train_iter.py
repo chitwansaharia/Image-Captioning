@@ -28,6 +28,9 @@ class SSFetcher(threading.Thread):
     def __init__(self, parent):
         threading.Thread.__init__(self)
         self.parent = parent
+        self.indices = range(len(self.parent.caption_to_image_dict))
+        np.random.shuffle(self.indices)
+
 
     def run(self):
         diter = self.parent
@@ -40,7 +43,7 @@ class SSFetcher(threading.Thread):
             mask = np.zeros((diter.batch_size,diter.max_caption_length))
             counter = 0
             while counter < diter.batch_size:
-                if offset == diter.num_images:
+                if offset == diter.num_data_points:
                     if not diter.use_infinite_loop:
                         print("Hello")
                         last_batch = True
@@ -53,19 +56,17 @@ class SSFetcher(threading.Thread):
                         offset = 0
                         print("End")
 
-                
-                image = utils.load_image(os.path.join(diter.image_path,diter.image_dict[offset]['file_name']))
-                caption_ids = diter.coco.getAnnIds(diter.image_dict[offset]['id'])
-                for _id in caption_ids:
-                    # pdb.set_trace()
-                    caption = diter.processed_captions[_id]
-                    if len(caption) > diter.max_caption_length:
-                        caption = caption[:diter.max_caption_length-1]
-                        caption.append(412)
-                    mask[counter,:len(caption)] = 1
-                    caption_batch[counter,:len(caption)] = caption
-                    image_batch[counter,:,:,:] = image.reshape((224, 224, 3))
-                    counter += 1
+                index = self.indices[offset]
+                (caption_id,image_file) = diter.caption_to_image_dict[index]
+                caption = diter.processed_captions[caption_id]
+                image = utils.load_image(os.path.join(diter.image_path,image_file))
+                if len(caption) > diter.max_caption_length:
+                    caption = caption[:diter.max_caption_length-1]
+                    caption.append(412)
+                mask[counter,:len(caption)] = 1
+                caption_batch[counter,:len(caption)] = caption
+                image_batch[counter,:,:,:] = image.reshape((224, 224, 3))
+                counter += 1
                 offset += 1
 
             if counter == diter.batch_size:
@@ -103,7 +104,13 @@ class SSIterator(object):
         self.image_path = "/data/lisatmp4/chitwan/mscoco/train2014_modified/"
         self.caption_path = "/data/lisatmp4/chitwan/mscoco/caption_processed/processed_captions.pkl"
         self.processed_captions = cPickle.load(open(self.caption_path,'r'))
-        self.num_images = len(self.image_dict)
+        self.caption_to_image_dict  = []
+        for image in self.image_dict:
+            for caption_id in self.coco.getAnnIds(image['id']):
+                self.caption_to_image_dict.append((caption_id, image['file_name']))
+        self.num_data_points = len(self.caption_to_image_dict)
+        # pdb.set_trace()
+
 
     def start(self):
         self.exit_flag = False
