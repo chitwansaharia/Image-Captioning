@@ -84,7 +84,7 @@ class ImageCaptioning(object):
         weights_1 = tf.get_variable("weights_1", [vgg_fc7_layer, decoder_units], dtype=tf.float32)
         bias_1 = tf.get_variable("bias_1", [decoder_units], dtype=tf.float32)
 
-
+        vgg_fc7 = tf.add(tf.matmul(self.vgg.fc7,weights_1),bias_1)
 
         
 
@@ -102,72 +102,8 @@ class ImageCaptioning(object):
         decoder_inputs = tf.nn.dropout(decoder_inputs, self.keep_prob)
 
 
-        state = self.initial_state["token_encoder_lstm"]
-        state_values_0 = []
-        state_values_1 = []
-        cell_output_values = []
-
-        with tf.variable_scope("token_encoder_lstm", initializer=rand_uni_initializer):
-            for time_step in range(max_tok_per_utr):
-                if time_step > 0:
-                    tf.get_variable_scope().reuse_variables()
-                (cell_output, state) = token_encoder_cell([encoder_inputs[:,time_step,:]], state)
-                state_values_0.append(state[0])
-                state_values_1.append(state[1])
-                cell_output_values.append(cell_output)
-
-
-
-
-
-        cell_output_values = tf.stack(cell_output_values,1)
-        state_values_0 = tf.stack(state_values_0,1)
-        state_values_1 = tf.stack(state_values_1,1)
-
-        cell_output_values = tf.reduce_sum(tf.multiply(cell_output_values,self.mask_encoder),1)
-        state_values_0 = tf.reduce_sum(tf.multiply(state_values_0,self.mask_encoder),1)
-        state_values_1 = tf.reduce_sum(tf.multiply(state_values_1,self.mask_encoder),1)
-
-        final_cell_output = cell_output_values
-        self.metrics["final_state_token_encoder_lstm"] = tf.nn.rnn_cell.LSTMStateTuple(state_values_0,state_values_1)
-
-
-
-
-
-
-        turn_encoder_cell = myLSTMCell(turn_encoder_units,forget_bias=1.0,state_is_tuple=True)
-
-        state =  self.initial_state["turn_encoder_lstm"] = turn_encoder_cell.zero_state(batch_size,tf.float32)
-
-        with tf.variable_scope("turn_encoder_lstm", initializer=rand_uni_initializer):
-            for time_step in range(max_num_turns):
-                if time_step > 0:
-                    tf.get_variable_scope().reuse_variables()
-                (cell_output, state) = turn_encoder_cell([final_cell_output], state)
-
-
-        self.metrics["final_state_turn_encoder_lstm"] = state
-        final_cell_output_turn = cell_output
-
-
         decoder_cell = myLSTMCell(decoder_units, forget_bias=1.0, state_is_tuple=True)
-        state = self.initial_state["decoder_lstm"] = decoder_cell.zero_state(batch_size, tf.float32)
-        state_values_1 = []
-        state_values_0 = []
-
-
-
-        weights_2 = tf.get_variable("weights_2", [500, 500], dtype=tf.float32)
-        bias_2 = tf.get_variable("bias_2", [500], dtype=tf.float32)
-
-        embedding = tf.add(tf.matmul(embedding,weights_2),bias_2)
-
-        decoder_inputs = tf.nn.embedding_lookup(embedding, self.decoder_inputs)
-
-
-        decoder_inputs = tf.nn.dropout(decoder_inputs, self.keep_prob)
-
+        state = vgg_fc7
 
         self.decoder_outputs = []
 
@@ -175,32 +111,14 @@ class ImageCaptioning(object):
             for time_step in range(max_tok_per_utr):
                 if time_step > 0:
                     tf.get_variable_scope().reuse_variables()
-                (cell_output, state) = decoder_cell([decoder_inputs[:,time_step,:],final_cell_output_turn], state)
-                # (cell_output, state) = decoder_cell([decoder_inputs[:,time_step,:]], state)
-                state_values_0.append(state[0])
-                state_values_1.append(state[1])
+                (cell_output, state) = decoder_cell([decoder_inputs[:,time_step,:]], state)
                 self.decoder_outputs.append(cell_output)
-
-        state_values_0 = tf.stack(state_values_0,1)
-        state_values_1 = tf.stack(state_values_1,1)
-
-        state_values_0 = tf.reduce_sum(tf.multiply(state_values_0,self.mask_decoder),1)
-        state_values_1 = tf.reduce_sum(tf.multiply(state_values_1,self.mask_decoder),1)
-
-        self.metrics["final_state_decoder_lstm"] = tf.nn.rnn_cell.LSTMStateTuple(state_values_0,state_values_1)
 
         full_conn_layers = [tf.reshape(tf.concat(axis=1, values=self.decoder_outputs), [-1, decoder_units])]
 
         # pdb.set_trace()
         #full_conn_layers = [tf.stack(outputs, name='stacked_output')]
         with tf.variable_scope("output_layer"):
-            self.model_logits = tf.contrib.layers.fully_connected(
-                inputs=full_conn_layers[-1],
-                num_outputs=num_penultimate,
-                activation_fn=tf.nn.relu,
-                weights_initializer=rand_uni_initializer,
-                biases_initializer=rand_uni_initializer,
-                trainable=True)
             self.model_logits = tf.contrib.layers.fully_connected(
                 inputs=self.model_logits,
                 num_outputs=vocab_size,
@@ -252,10 +170,7 @@ class ImageCaptioning(object):
         keep_prob = 1.0
         fetches = {
             "loss": self.metrics["loss"],
-            "grad_sum": self.metrics["grad_sum"],
-            "token_encoder_lstm": self.metrics["final_state_token_encoder_lstm"],
-            "turn_encoder_lstm": self.metrics["final_state_turn_encoder_lstm"],
-            "decoder_lstm": self.metrics["final_state_decoder_lstm"],
+            "grad_sum": self.metrics["grad_sum"]
 
         }
 
@@ -286,20 +201,17 @@ class ImageCaptioning(object):
             batch = reader.next()
             i+=1
         print("Resuming at Batch Number = %d" % iter_count_val)
-
         batch = reader.next()
         while batch != None:
 
             session.run(self.inc)
             feed_dict = {}
-            feed_dict[self.y.name] = batch["decoder_outputs"]
+            feed_dict[self.y.name] = batch["caption_batch_y"]
             feed_dict[self.wts.name] = batch["mask"]
-            feed_dict[self.encoder_inputs.name] = batch["encoder_inputs"]
-            feed_dict[self.decoder_inputs.name] = batch["decoder_inputs"]
+            feed_dict[self.decoder_inputs.name] = batch["caption_batch_x"]
             feed_dict[self.keep_prob.name] = keep_prob
             feed_dict[self.phase_train.name] = phase_train
-            feed_dict[self.mask_encoder] = batch["mask_encoder"]
-            feed_dict[self.mask_decoder] = batch["mask_decoder"]
+            feed_dict[self.conv_inputs.name] = batch['image_batch']
 
             # pdb.set_trace()
 
@@ -309,10 +221,9 @@ class ImageCaptioning(object):
             # else:
             #     feed_dict[self.decoder_input_decider.name] = 1
 
-            if batch["reset"]:
-                state = {}
-                for k, v in self.initial_state.items():
-                    state[k] = session.run(v)
+            state = {}
+            for k, v in self.initial_state.items():
+                state[k] = session.run(v)
 
             for k in state:
                 feed_dict[self.initial_state[k].c] = state[k].c
@@ -323,10 +234,6 @@ class ImageCaptioning(object):
                 state[k] = session.run(v)
 
             vals = session.run(fetches, feed_dict)
-
-            # pdb.set_trace()
-            for k in state:
-                state[k] = vals[k]
 
             total_loss += vals["loss"]
             grad_sum += vals["grad_sum"]
