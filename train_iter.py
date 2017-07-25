@@ -24,6 +24,15 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
+def process(caption,max_length):
+    caption_x  = caption[:-1]
+    caption_y = caption[1:]
+    if len(caption_x) > max_length:
+        caption_x = caption[:max_length]
+        caption_y = caption[:max_length-1]
+        caption_y.append(412)
+    return (caption_x,caption_y)
+
 class SSFetcher(threading.Thread):
     def __init__(self, parent):
         threading.Thread.__init__(self)
@@ -39,7 +48,8 @@ class SSFetcher(threading.Thread):
         while not diter.exit_flag:
             last_batch = False
             image_batch = np.zeros((diter.batch_size,224,224,3))
-            caption_batch = np.zeros((diter.batch_size,diter.max_caption_length))
+            caption_batch_x = np.zeros((diter.batch_size,diter.max_caption_length))
+            caption_batch_y = np.zeros((diter.batch_size,diter.max_caption_length))
             mask = np.zeros((diter.batch_size,diter.max_caption_length))
             counter = 0
             while counter < diter.batch_size:
@@ -50,9 +60,6 @@ class SSFetcher(threading.Thread):
                         diter.queue.put(None)
                         return
                     else:
-                    # Infinite loop here, we reshuffle the indexes
-                    # and reset the offset
-                    # self.rng.shuffle(self.indexes)
                         offset = 0
                         print("End")
 
@@ -60,18 +67,22 @@ class SSFetcher(threading.Thread):
                 (caption_id,image_file) = diter.caption_to_image_dict[index]
                 caption = diter.processed_captions[caption_id]
                 image = utils.load_image(os.path.join(diter.image_path,image_file))
-                if len(caption) > diter.max_caption_length:
-                    caption = caption[:diter.max_caption_length-1]
-                    caption.append(412)
-                mask[counter,:len(caption)] = 1
-                caption_batch[counter,:len(caption)] = caption
+                caption_x,caption_y = process(caption,diter.max_caption_length)
+                mask[counter,:len(caption_x)] = 1
+                caption_batch_x[counter,:len(caption_x)] = caption_x
+                caption_batch_y[counter,:len(caption_y)] = caption_y
                 image_batch[counter,:,:,:] = image.reshape((224, 224, 3))
                 counter += 1
                 offset += 1
 
             if counter == diter.batch_size:
                 print(i)
-                diter.queue.put((image_batch,caption_batch,mask))
+                batch = {}
+                batch['image_batch'] = image_batch
+                batch['caption_batch_x'] = caption_batch_x
+                batch['caption_batch_y'] = caption_batch_y
+                batch['mask'] = mask
+                diter.queue.put(batch)
                 i+=1
 
             if last_batch:

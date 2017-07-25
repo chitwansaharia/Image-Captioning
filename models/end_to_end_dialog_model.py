@@ -2,13 +2,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys 
+sys.path.append('/u/sahariac/Image-Captioning/')
+
 import time
 import numpy as np
 import tensorflow as tf
 from tools import my_lib
 from models.lstm_cell import myLSTMCell, _linear
 import pdb
+from tenforflow_vgg import vgg19_traininable as vgg19
 
+vgg_fc7_layer = 4096
 
 
 class ImageCaptioning(object):
@@ -53,6 +58,7 @@ class ImageCaptioning(object):
 
         self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
         self.phase_train = tf.placeholder(tf.bool, name="phase_train")
+        self.vgg_train = tf.placeholder(tf.bool, name="vgg_train")
         self.iter_count = tf.Variable(initial_value = 0,dtype=tf.int64, name="iter_count")
         self.inc = tf.assign_add(self.iter_count, 1, name='increment')
         self.refresh = tf.assign(self.iter_count,0)
@@ -67,46 +73,33 @@ class ImageCaptioning(object):
         input_size = config.input_size
         max_tokens_per_caption = config.max_tokens_per_caption
 
-
         rand_uni_initializer = \
             tf.random_uniform_initializer(
                 -self.config.init_scale, self.config.init_scale)
 
+        self.vgg = vgg19.Vgg19('../tensorflow_vgg/Vgg19.npy')
+
+        self.vgg.build(self.conv_inputs, self.vgg_train)
+
+        weights_1 = tf.get_variable("weights_1", [vgg_fc7_layer, decoder_units], dtype=tf.float32)
+        bias_1 = tf.get_variable("bias_1", [decoder_units], dtype=tf.float32)
 
 
-        self.initial_state = {}
-        self.initial_state["token_encoder_lstm"] = token_encoder_cell.zero_state(batch_size, tf.float32)
-#
-        encoder_inputs = self.encoder_inputs
+
+        
 
 
-        vocabulary = ptb._build_vocab('/data/lisatmp4/chinna/data/ubuntu/Dataset.dict.pkl')
-        file = open("/data/lisatmp4/chinna/Documents/UbuntuData/sg_vectors_ubuntu.txt")
-
-
-        embedding_map = np.zeros((len(vocabulary.keys()),config.vocab_emd_size),dtype=np.float32)
-
-        line = file.readline()
-
-        for line in file:
-            line = line.strip().split()
-            if line[0] in vocabulary.keys():
-                embedding_map[vocabulary[line[0]],:] = [float(i) for i in line[1:]]
+  
 
         # embedding = tf.constant(value=embedding_map,name="embedding")
 
-        embedding = tf.Variable(initial_value=embedding_map,name="embedding")
+        embedding = tf.get_variable("embedding",[vocab_size,input_size],name="embedding")
 
-        weights_1 = tf.get_variable("weights_1", [300, 500], dtype=tf.float32)
-        bias_1 = tf.get_variable("bias_1", [500], dtype=tf.float32)
-
-        embedding = tf.add(tf.matmul(embedding,weights_1),bias_1)
-
-        encoder_inputs = tf.nn.embedding_lookup(embedding, encoder_inputs)
+        decoder_inputs = tf.nn.embedding_lookup(embedding, self.decoder_inputs)
 
 
 
-        encoder_inputs = tf.nn.dropout(encoder_inputs, self.keep_prob)
+        decoder_inputs = tf.nn.dropout(decoder_inputs, self.keep_prob)
 
 
         state = self.initial_state["token_encoder_lstm"]
