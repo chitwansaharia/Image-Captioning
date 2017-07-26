@@ -12,10 +12,10 @@ import tensorflow as tf
 import sys
 import os
 from models import image_captioning_model
-from data_readers import ptb, wiki
+# from data_readers import ptb, wiki
 from train_iter import *
 import imp
-import Data_iter
+# import Data_iter
 import pdb
 
 flags = tf.flags
@@ -43,7 +43,7 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
-    assert(FLAGS.save_path)
+    # assert(FLAGS.save_path)
     # sent_config = imp.load_source('config', FLAGS.config).config().lm
 
     model_config = imp.load_source('config', 'config/config.py').config().image

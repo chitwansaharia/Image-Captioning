@@ -81,38 +81,43 @@ def image_caption_config():
     config.decoder_units = 2000
     config.vocab_size = 15000
     config.input_size = 300
+    config.save_path = '/data/lisatmp4/chitwan/mscoco/saved_weights/'
+    config.model = "image_captioning_model.ImageCaptioning"
+    config.image_height = 224
+    config.image_width = 224
+    config.image_channels = 3
     return config
 
 
-def hybrid_attention_config():
-    config = hybrid_config()
-    config.encoder_units = 500
-    config.decoder_units = 1200
-    config.model = "hybrid_model_with_attention.HybridDialogModel"
-    return config
+# def hybrid_attention_config():
+#     config = hybrid_config()
+#     config.encoder_units = 500
+#     config.decoder_units = 1200
+#     config.model = "hybrid_model_with_attention.HybridDialogModel"
+#     return config
 
 
 
-def hybrid_config_1():
-    config = hybrid_config()
-    return config
+# def hybrid_config_1():
+#     config = hybrid_config()
+#     return config
 
-def hybrid_config_2():
-    config = hybrid_config()
-    config.data_path_train = 'Data/80/Train_modified.pkl'
-    config.data_path_valid = 'Data/80/Valid_modified.pkl'
-    config.max_token_per_utr = 80
-    return config
+# def hybrid_config_2():
+#     config = hybrid_config()
+#     config.data_path_train = 'Data/80/Train_modified.pkl'
+#     config.data_path_valid = 'Data/80/Valid_modified.pkl'
+#     config.max_token_per_utr = 80
+#     return config
 
-def hybrid_config_3():
-    config = hybrid_config()
-    config.decoder_units = 800
-    return config
+# def hybrid_config_3():
+#     config = hybrid_config()
+#     config.decoder_units = 800
+#     return config
 
 
 def config():
     config = config_container()
-    config.dialog = hybrid_config()
+    # config.dialog = hybrid_config()
     # config.hybrid_config_1 = hybrid_config_1()
     # config.hybrid_config_2 = hybrid_config_2()
     # config.hybrid_config_3 = hybrid_config_3()

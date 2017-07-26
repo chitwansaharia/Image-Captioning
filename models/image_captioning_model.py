@@ -11,7 +11,7 @@ import tensorflow as tf
 from tools import my_lib
 from models.lstm_cell import myLSTMCell, _linear
 import pdb
-from tenforflow_vgg import vgg19_traininable as vgg19
+from tensorflow_vgg import vgg19_trainable as vgg19
 
 vgg_fc7_layer = 4096
 
@@ -40,14 +40,13 @@ class ImageCaptioning(object):
     def create_placeholders(self):
         batch_size = self.config.batch_size
         max_tokens_per_caption = self.config.max_tokens_per_caption
-        uttr_emb_size = self.config.uttr_emb_size
         image_height = self.config.image_height
         image_width = self.config.image_width
         image_channels = self.config.image_channels
 
         # input_data placeholders
         self.conv_inputs = tf.placeholder(
-            tf.int64, shape=[batch_size,image_height,image_width,image_channels], name="encoder_inputs")
+            tf.float32, shape=[batch_size,image_height,image_width,image_channels], name="encoder_inputs")
         self.decoder_inputs = tf.placeholder(
             tf.int64, shape=[batch_size,max_tokens_per_caption], name="decoder_inputs")
         self.y = tf.placeholder(
@@ -77,7 +76,7 @@ class ImageCaptioning(object):
             tf.random_uniform_initializer(
                 -self.config.init_scale, self.config.init_scale)
 
-        self.vgg = vgg19.Vgg19('../tensorflow_vgg/Vgg19.npy')
+        self.vgg = vgg19.Vgg19('/u/sahariac/Image-Captioning/tensorflow_vgg/Vgg19.npy')
 
         self.vgg.build(self.conv_inputs, self.vgg_train)
 
@@ -93,7 +92,7 @@ class ImageCaptioning(object):
 
         # embedding = tf.constant(value=embedding_map,name="embedding")
 
-        embedding = tf.get_variable("embedding",[vocab_size,input_size],name="embedding")
+        embedding = tf.get_variable("embedding",[vocab_size,input_size])
 
         decoder_inputs = tf.nn.embedding_lookup(embedding, self.decoder_inputs)
 
@@ -108,7 +107,7 @@ class ImageCaptioning(object):
         self.decoder_outputs = []
 
         with tf.variable_scope("decoder_lstm", initializer=rand_uni_initializer):
-            for time_step in range(max_tok_per_utr):
+            for time_step in range(max_tokens_per_caption):
                 if time_step > 0:
                     tf.get_variable_scope().reuse_variables()
                 (cell_output, state) = decoder_cell([decoder_inputs[:,time_step,:]], state)
@@ -212,6 +211,7 @@ class ImageCaptioning(object):
             feed_dict[self.keep_prob.name] = keep_prob
             feed_dict[self.phase_train.name] = phase_train
             feed_dict[self.conv_inputs.name] = batch['image_batch']
+            feed_dict[self.vgg_train.name] = False
 
             # pdb.set_trace()
 
@@ -246,7 +246,7 @@ class ImageCaptioning(object):
             if verbose:
                 print(
                     "% Complete :", round(percent_complete, 0),
-                    "HybridDialogModel model : perplexity :", round(perplexity, 3),
+                    "Captioning Model : perplexity :", round(perplexity, 3),
                     "loss :", round((total_loss / total_words), 3), \
                     # "grad_sum: ", round(grad_sum, 3), \
                     "words/sec :", round((total_words) / (time.time() - start_time), 0),
