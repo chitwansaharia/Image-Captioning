@@ -83,14 +83,12 @@ class ImageCaptioning(object):
         weights_1 = tf.get_variable("weights_1", [vgg_fc7_layer, decoder_units], dtype=tf.float32)
         bias_1 = tf.get_variable("bias_1", [decoder_units], dtype=tf.float32)
 
-        vgg_fc7 = tf.add(tf.matmul(self.vgg.fc7,weights_1),bias_1)
+        weights_2 = tf.get_variable("weights_2", [vgg_fc7_layer, decoder_units], dtype=tf.float32)
+        bias_2 = tf.get_variable("bias_2", [decoder_units], dtype=tf.float32)
 
-        
+        vgg_fc7_c = tf.add(tf.matmul(self.vgg.fc7,weights_1),bias_1)
+        vgg_fc7_h = tf.add(tf.matmul(self.vgg.fc7,weights_2),bias_2)
 
-
-  
-
-        # embedding = tf.constant(value=embedding_map,name="embedding")
 
         embedding = tf.get_variable("embedding",[vocab_size,input_size])
 
@@ -102,7 +100,7 @@ class ImageCaptioning(object):
 
 
         decoder_cell = myLSTMCell(decoder_units, forget_bias=1.0, state_is_tuple=True)
-        state = vgg_fc7
+        state = vgg_fc7_c,vgg_fc7_h
 
         self.decoder_outputs = []
 
@@ -119,7 +117,7 @@ class ImageCaptioning(object):
         #full_conn_layers = [tf.stack(outputs, name='stacked_output')]
         with tf.variable_scope("output_layer"):
             self.model_logits = tf.contrib.layers.fully_connected(
-                inputs=self.model_logits,
+                inputs=full_conn_layers,
                 num_outputs=vocab_size,
                 activation_fn=None,
                 weights_initializer=rand_uni_initializer,
@@ -127,17 +125,9 @@ class ImageCaptioning(object):
                 trainable=True)
 
             self.metrics["model_prob"] = tf.nn.softmax(self.model_logits)
-
     def compute_loss_and_metrics(self):
-        # entropy_loss = tf.contrib.seq2seq.sequence_loss(
-        #    logits=self.model_logits,
-        #    targets=self.y,
-        #    weights=self.wts,
-        #    average_across_timesteps=False,
-        #    average_across_batch=False)
-
         entropy_loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example(
-            [self.model_logits],
+            [tf.squeeze(self.model_logits,axis = 0)],
             [tf.reshape(self.y, [-1])],
             [tf.reshape(self.wts, [-1])],
             average_across_timesteps=False)
