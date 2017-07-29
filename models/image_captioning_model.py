@@ -53,7 +53,6 @@ class ImageCaptioning(object):
             tf.int64, shape=[batch_size,max_tokens_per_caption], name="targets")
         self.wts = tf.placeholder(
             tf.float32, shape=[batch_size,max_tokens_per_caption], name="weights")
-        self.mask_decoder =  tf.placeholder(tf.float32,shape=[batch_size,max_tokens_per_caption,self.config.decoder_units],name="mask_decoder")
 
         self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")
         self.phase_train = tf.placeholder(tf.bool, name="phase_train")
@@ -78,7 +77,7 @@ class ImageCaptioning(object):
 
         self.vgg = vgg19.Vgg19('/u/sahariac/Image-Captioning/tensorflow_vgg/Vgg19.npy')
 
-        self.vgg.build(self.conv_inputs, self.vgg_train)
+        self.vgg.build(self.conv_inputs,self.vgg_train)
 
         weights_1 = tf.get_variable("weights_1", [vgg_fc7_layer, decoder_units], dtype=tf.float32)
         bias_1 = tf.get_variable("bias_1", [decoder_units], dtype=tf.float32)
@@ -88,6 +87,8 @@ class ImageCaptioning(object):
 
         vgg_fc7_c = tf.add(tf.matmul(self.vgg.fc7,weights_1),bias_1)
         vgg_fc7_h = tf.add(tf.matmul(self.vgg.fc7,weights_2),bias_2)
+
+        self.metrics["vggfc7"] = self.vgg.fc7
 
 
         embedding = tf.get_variable("embedding",[vocab_size,input_size])
@@ -100,7 +101,9 @@ class ImageCaptioning(object):
 
 
         decoder_cell = myLSTMCell(decoder_units, forget_bias=1.0, state_is_tuple=True)
-        state = vgg_fc7_c,vgg_fc7_h
+
+        state = tf.nn.rnn_cell.LSTMStateTuple(vgg_fc7_c,vgg_fc7_h)
+
 
         self.decoder_outputs = []
 
@@ -110,28 +113,32 @@ class ImageCaptioning(object):
                     tf.get_variable_scope().reuse_variables()
                 (cell_output, state) = decoder_cell([decoder_inputs[:,time_step,:]], state)
                 self.decoder_outputs.append(cell_output)
+        
 
         full_conn_layers = [tf.reshape(tf.concat(axis=1, values=self.decoder_outputs), [-1, decoder_units])]
 
-        # pdb.set_trace()
-        #full_conn_layers = [tf.stack(outputs, name='stacked_output')]
+        self.metrics["full_conn"] = full_conn_layers[-1]        
         with tf.variable_scope("output_layer"):
             self.model_logits = tf.contrib.layers.fully_connected(
-                inputs=full_conn_layers,
-                num_outputs=vocab_size,
-                activation_fn=None,
-                weights_initializer=rand_uni_initializer,
-                biases_initializer=rand_uni_initializer,
-                trainable=True)
+                    inputs=full_conn_layers[-1],
+                    num_outputs=vocab_size,
+                    activation_fn=None,
+                    weights_initializer=rand_uni_initializer,
+                    biases_initializer=rand_uni_initializer,
+                    trainable=True)
 
+            self.metrics["model_prob1"] = self.model_logits
             self.metrics["model_prob"] = tf.nn.softmax(self.model_logits)
+
+
+    
     def compute_loss_and_metrics(self):
         entropy_loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example(
-            [tf.squeeze(self.model_logits,axis = 0)],
+            [self.model_logits],
             [tf.reshape(self.y, [-1])],
             [tf.reshape(self.wts, [-1])],
             average_across_timesteps=False)
-
+        # # # pdb.set_trace()
         self.metrics["loss"] = tf.reduce_sum(entropy_loss)
 
     def compute_gradients_and_train_op(self):
@@ -153,6 +160,7 @@ class ImageCaptioning(object):
     def init_feed_dict(self):
         return {self.phase_train.name: True}
 
+
     def run_epoch(self, session,reader, is_training=False, verbose=False):
         start_time = time.time()
         epoch_metrics = {}
@@ -162,7 +170,6 @@ class ImageCaptioning(object):
             "grad_sum": self.metrics["grad_sum"]
 
         }
-
         if is_training:
             if verbose:
                 print("\nTraining...")
@@ -177,9 +184,6 @@ class ImageCaptioning(object):
 
 
         i, total_loss, grad_sum, total_words = 0, 0.0, 0.0, 0.0
-        state = {}
-        for k, v in self.initial_state.items():
-            state[k] = session.run(v)
 
         reader.start()
 
@@ -205,32 +209,14 @@ class ImageCaptioning(object):
 
             # pdb.set_trace()
 
-
-            # if is_training:
-            #     feed_dict[self.decoder_input_decider.name] = np.random.random_sample()
-            # else:
-            #     feed_dict[self.decoder_input_decider.name] = 1
-
-            state = {}
-            for k, v in self.initial_state.items():
-                state[k] = session.run(v)
-
-            for k in state:
-                feed_dict[self.initial_state[k].c] = state[k].c
-                feed_dict[self.initial_state[k].h] = state[k].h
-
-            state = {}
-            for k, v in self.initial_state.items():
-                state[k] = session.run(v)
-
             vals = session.run(fetches, feed_dict)
-
             total_loss += vals["loss"]
             grad_sum += vals["grad_sum"]
             total_words += np.sum(batch["mask"]) * 1.0
 
             i += 1
-            percent_complete = (i * 100.0) / self.config.iters_per_epoch
+
+            percent_complete = (i * 100.0) / self.config.num_iters
             perplexity = np.exp(total_loss / total_words)
 
             if verbose:
@@ -238,7 +224,6 @@ class ImageCaptioning(object):
                     "% Complete :", round(percent_complete, 0),
                     "Captioning Model : perplexity :", round(perplexity, 3),
                     "loss :", round((total_loss / total_words), 3), \
-                    # "grad_sum: ", round(grad_sum, 3), \
                     "words/sec :", round((total_words) / (time.time() - start_time), 0),
                     "Gradient :", round(vals["grad_sum"],3))
             batch = reader.next()
@@ -249,34 +234,3 @@ class ImageCaptioning(object):
         return epoch_metrics
 
 
-    def run_step(self, session, word_id, model_state=None):
-        epoch_metrics = {}
-        keep_prob = 1.0
-        phase_train = False
-        fetches = {
-            "model_prob": self.metrics["model_prob"],
-            # "final_state_encoder_lstm": self.metrics["final_state_encoder_lstm"],
-            "final_state_decoder_lstm": self.metrics["final_state_decoder_lstm"]
-        }
-
-        state = {}
-        if not model_state:
-            for k in self.initial_state:
-                state[k] = session.run(self.initial_state[k])
-        else:
-            for k in self.initial_state:
-                state[k] = model_state["final_state_{}".format(k)]
-
-        feed_dict = {}
-        feed_dict[self.x.name] = np.array([[word_id]])
-        feed_dict[self.wts.name] = np.ones((1, 1))
-        for k in self.initial_state:
-            feed_dict[self.initial_state[k].c] = state[k].c
-            feed_dict[self.initial_state[k].h] = state[k].h
-        feed_dict[self.keep_prob.name] = keep_prob
-        feed_dict[self.phase_train.name] = phase_train
-
-        vals = session.run(fetches, feed_dict)
-        vals["model_prob"] = np.squeeze(vals["model_prob"])
-
-        return vals

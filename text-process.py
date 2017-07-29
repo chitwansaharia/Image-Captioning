@@ -23,7 +23,7 @@ all_words = list(itertools.chain.from_iterable(tokenised_text))
 
 from collections import Counter
 
-vocab_size  = 10000
+vocab_size  = 15000
 
 word_dict = dict(Counter(all_words).most_common(vocab_size))
 

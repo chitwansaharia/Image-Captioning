@@ -86,7 +86,7 @@ def main(_):
         sv = tf.train.Supervisor( logdir=log_path, init_feed_dict=main_model.init_feed_dict())
         
         with sv.managed_session() as session:
-            if dial_config.load_mode == "best":
+            if model_config.load_mode == "best":
                 sv.saver.restore(
                     sess=session,
                     save_path=os.path.join(save_path, "best_model.ckpt"))
@@ -95,7 +95,7 @@ def main(_):
             i, patience = 0, 0
             best_valid_metric = 1e10
 
-            while patience < dial_config.patience and not eval(FLAGS.eval_only):
+            while patience < model_config.patience and not eval(FLAGS.eval_only):
                 i += 1
                 # train_reader = Data_iter.get_train_iterator(dial_config)
                 # valid_reader = Data_iter.get_validation_iterator(dial_config)

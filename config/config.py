@@ -36,7 +36,7 @@ def sampler_config():
 
 def default_config():
     config = config_container()
-    config.load_mode = "best"
+    config.load_mode = "continue"
     config.patience = 3
     config.init_scale = 0.1
     config.max_grad_norm = 5
@@ -76,16 +76,19 @@ def default_config():
 
 def image_caption_config():
     config = default_config()
-    config.batch_size  = 60
-    config.max_tokens_per_caption = 50
+    config.batch_size  = 50
+    config.max_tokens_per_caption = 45
     config.decoder_units = 2000
-    config.vocab_size = 15000
+    config.vocab_size = 15002
     config.input_size = 300
     config.save_path = '/data/lisatmp4/chitwan/mscoco/saved_weights/'
     config.model = "image_captioning_model.ImageCaptioning"
     config.image_height = 224
     config.image_width = 224
     config.image_channels = 3
+    config.learning_rate = 0.0001
+    config.num_iters = 414113/config.batch_size
+    config.use_infinite_loop = False
     return config
 
 

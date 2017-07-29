@@ -1,1 +1,1 @@
-python train_hybrid.py --save_path="SAVE" --log_path="SAVE"
+python train_hybrid.py --save_path="/data/lisatmp4/chitwan/mscoco/Saved_Weights/SAVE/" --log_path="/data/lisatmp4/chitwan/mscoco/Saved_Weights/SAVE/"

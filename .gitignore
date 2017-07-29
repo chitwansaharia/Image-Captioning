@@ -2,3 +2,4 @@
 tensorflow_vgg/*.npy
 model/*.pyc
 tensorflow_vgg/*.pyc
+SAVE/

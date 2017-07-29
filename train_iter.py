@@ -24,13 +24,15 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
+
+
 def process(caption,max_length):
     caption_x  = caption[:-1]
     caption_y = caption[1:]
     if len(caption_x) > max_length:
         caption_x = caption[:max_length]
         caption_y = caption[:max_length-1]
-        caption_y.append(412)
+        caption_y.append(609)
     return (caption_x,caption_y)
 
 class SSFetcher(threading.Thread):
@@ -76,7 +78,6 @@ class SSFetcher(threading.Thread):
                 offset += 1
 
             if counter == diter.batch_size:
-                print(i)
                 batch = {}
                 batch['image_batch'] = image_batch
                 batch['caption_batch_x'] = caption_batch_x
@@ -120,7 +121,6 @@ class SSIterator(object):
             for caption_id in self.coco.getAnnIds(image['id']):
                 self.caption_to_image_dict.append((caption_id, image['file_name']))
         self.num_data_points = len(self.caption_to_image_dict)
-        # pdb.set_trace()
 
 
     def start(self):
