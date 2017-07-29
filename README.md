@@ -17,7 +17,12 @@ Use the following for saving the processed image in the required directory (the 
 ``` bash 
 python image_process.py 
 ```
+## Processing Captions
 
+The pycocotool assigns a caption id to each caption and each image has 5 captions. The text-process.py takes the captions (in the form of words through the pycocotool) and then builds a vocabulary (15000 tokens) and stores the index form captions in a pkl file (the path of the file can be changed in the code).
+``` bash 
+python text-process.py 
+```
 
 
 
