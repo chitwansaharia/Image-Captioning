@@ -3,6 +3,8 @@ matplotlib.use('Agg')
 from pycocotools.coco import COCO 
 import numpy as np
 import pdb
+import cPickle
+
 dataType='train2014'
 annFile = '/data/lisatmp4/chitwan/mscoco/annotations/captions_%s.json'%(dataType)
 coco = COCO(annFile)
@@ -36,6 +38,9 @@ word_to_index['STOP_TOKEN'] = word_to_index['.']
 word_to_index.pop('.',None)
 word_to_index['START_TOKEN'] = 15001
 
+with open('/data/lisatmp4/chitwan/mscoco/caption_processed/vocabulary.pkl','wb') as file:
+	cPickle.dump(word_to_index, file)
+
 tokenized_index = []
 
 text = [(item['id'],item['caption'].encode('ascii','ignore')) for item in captions]
@@ -44,7 +49,6 @@ tokenised_text = dict(map(lambda text_item :(text_item[0],word_tokenize(text_ite
 
 final_dict = {}
 
-import cPickle
 
 total = len(tokenised_text)
 count = 0

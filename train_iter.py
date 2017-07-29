@@ -24,7 +24,9 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
-
+vocab_path = "/data/lisatmp4/chitwan/mscoco/caption_processed/vocabulary.pkl"
+vocabulary = cPickle.load(open(vocab_path,'r'))
+STOP_TOKEN  = vocabulary['STOP_TOKEN']
 
 def process(caption,max_length):
     caption_x  = caption[:-1]
@@ -32,7 +34,7 @@ def process(caption,max_length):
     if len(caption_x) > max_length:
         caption_x = caption[:max_length]
         caption_y = caption[:max_length-1]
-        caption_y.append(609)
+        caption_y.append(STOP_TOKEN)
     return (caption_x,caption_y)
 
 class SSFetcher(threading.Thread):
@@ -121,6 +123,8 @@ class SSIterator(object):
             for caption_id in self.coco.getAnnIds(image['id']):
                 self.caption_to_image_dict.append((caption_id, image['file_name']))
         self.num_data_points = len(self.caption_to_image_dict)
+        
+
 
 
     def start(self):

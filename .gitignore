@@ -1,5 +1,5 @@
 *.pyc
 tensorflow_vgg/*.npy
-model/*.pyc
+models/*.pyc
 tensorflow_vgg/*.pyc
 SAVE/
