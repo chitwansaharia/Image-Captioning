@@ -57,7 +57,7 @@ class SSFetcher(threading.Thread):
             mask = np.zeros((diter.batch_size,diter.max_caption_length))
             counter = 0
             while counter < diter.batch_size:
-                if offset == 100:
+                if offset == diter.num_data_points:
                     if not diter.use_infinite_loop:
                         print("Hello")
                         last_batch = True
@@ -103,7 +103,7 @@ class SSIterator(object):
 
         self.batch_size = batch_size
         self.max_caption_length = max_caption_length
-
+        self.config = config
         args = locals()
         args.pop("self")
         self.__dict__.update(args)
@@ -111,13 +111,13 @@ class SSIterator(object):
         self.exit_flag = False
 
     def load_files(self):
-        self.dataType='train2014'
-        self.annFile = '/data/lisatmp4/chitwan/mscoco/annotations/captions_%s.json'%(self.dataType)
+        config = self.config
+        self.annFile = config.annFile
         self.coco = COCO(self.annFile)
         image_id_list = self.coco.getImgIds()
         self.image_dict = self.coco.loadImgs(image_id_list)
-        self.image_path = "/data/lisatmp4/chitwan/mscoco/train2014_modified/"
-        self.caption_path = "/data/lisatmp4/chitwan/mscoco/caption_processed/processed_captions.pkl"
+        self.image_path = config.image_path
+        self.caption_path = config.caption_file
         self.processed_captions = cPickle.load(open(self.caption_path,'r'))
         self.caption_to_image_dict  = []
         for image in self.image_dict:

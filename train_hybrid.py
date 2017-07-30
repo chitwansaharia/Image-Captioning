@@ -100,25 +100,24 @@ def main(_):
 
             while patience < model_config.patience and not eval(FLAGS.eval_only):
                 i += 1
-                # train_reader = Data_iter.get_train_iterator(dial_config)
-                # valid_reader = Data_iter.get_validation_iterator(dial_config)
+
                 iterator_train = SSIterator(model_config.batch_size,file_train_config,model_config.max_tokens_per_caption,1234)
                 iterator_valid = SSIterator(model_config.batch_size,file_valid_config,model_config.max_tokens_per_caption,1234)
                 
                 print("\nEpoch: %d" % (i))
-                main_model.run_epoch(session, reader = iterator, is_training=True, verbose=True)
+                main_model.run_epoch(session, reader = iterator_train, is_training=True, verbose=True)
 
-                # valid_metrics = main_model.run_epoch(session, reader = valid_reader, verbose=True)
+                valid_metrics = main_model.run_epoch(session, reader = iterator_valid, verbose=True)
 
-                # if best_valid_metric > valid_metrics["loss"]:
-                #     best_valid_metric = valid_metrics["loss"]
+                if best_valid_metric > valid_metrics["loss"]:
+                    best_valid_metric = valid_metrics["loss"]
 
-                #     print("\nsaving best model...")
-                #     sv.saver.save(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
-                #     patience = 0
-                # else:
-                #     patience += 1
-                #     print("\nLosing patience...")
+                    print("\nsaving best model...")
+                    sv.saver.save(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
+                    patience = 0
+                else:
+                    patience += 1
+                    print("\nLosing patience...")
 
             # print("\nLoading best model and Evaluating with Test set...")
             # sv.saver.restore(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))

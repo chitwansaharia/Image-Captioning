@@ -55,25 +55,6 @@ def default_config():
     config.max_token_per_utr = 100
     return config
 
-# def hybrid_config():
-#     config = default_config()
-#     config.vocab_size = 20000
-#     config.decoder_units = 2000
-#     config.turn_encoder_units = 500
-#     config.token_encoder_units = 1000
-#     config.use_infinite_loop = False
-#     config.seed = 1234
-#     config.iters_per_epoch = 5000
-#     config.num_penultimate = 500
-#     config.reader = "wiki.wiki_reader"
-#     config.save_path = "hybrid/default/"
-#     config.data_path_train = 'Data/100/Train_modified.pkl'
-#     config.data_path_valid = 'Data/100/Valid_modified.pkl'
-#     config.model = "end_to_end_dialog_model.HybridDialogModel"
-#     config.load_mode = "continue"
-#     config.learning_rate = 0.0002
-#     return config
-
 def image_caption_config():
     config = default_config()
     config.batch_size  = 50
@@ -91,42 +72,29 @@ def image_caption_config():
     config.use_infinite_loop = False
     return config
 
+def train_file():
+    config = image_caption_config()
+    config.annFile = '/data/lisatmp4/chitwan/mscoco/annotations/captions_train2014.json'
+    config.image_path = '/data/lisatmp4/chitwan/mscoco/train2014_modified'
+    config.caption_file = '/data/lisatmp4/chitwan/mscoco/caption_processed/processed_captions_train.pkl'
+    return config
 
-# def hybrid_attention_config():
-#     config = hybrid_config()
-#     config.encoder_units = 500
-#     config.decoder_units = 1200
-#     config.model = "hybrid_model_with_attention.HybridDialogModel"
-#     return config
+def valid_file():
+    config = image_caption_config()
+    config.annFile = '/data/lisatmp4/chitwan/mscoco/annotations/captions_val2014.json'
+    config.image_path = '/data/lisatmp4/chitwan/mscoco/val2014_modified'
+    config.caption_file = '/data/lisatmp4/chitwan/mscoco/caption_processed/processed_captions_valid.pkl'
+    return config
 
 
-
-# def hybrid_config_1():
-#     config = hybrid_config()
-#     return config
-
-# def hybrid_config_2():
-#     config = hybrid_config()
-#     config.data_path_train = 'Data/80/Train_modified.pkl'
-#     config.data_path_valid = 'Data/80/Valid_modified.pkl'
-#     config.max_token_per_utr = 80
-#     return config
-
-# def hybrid_config_3():
-#     config = hybrid_config()
-#     config.decoder_units = 800
-#     return config
 
 
 def config():
     config = config_container()
-    # config.dialog = hybrid_config()
-    # config.hybrid_config_1 = hybrid_config_1()
-    # config.hybrid_config_2 = hybrid_config_2()
-    # config.hybrid_config_3 = hybrid_config_3()
-    # config.attn = hybrid_attention_config()
     config.sampler = sampler_config()
     config.image = image_caption_config()
+    config.train = train_file()
+    config.valid = valid_file()
     return config
 
 
