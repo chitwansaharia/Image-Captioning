@@ -57,7 +57,7 @@ class SSFetcher(threading.Thread):
             mask = np.zeros((diter.batch_size,diter.max_caption_length))
             counter = 0
             while counter < diter.batch_size:
-                if offset == diter.num_data_points:
+                if offset == 100:
                     if not diter.use_infinite_loop:
                         print("Hello")
                         last_batch = True
@@ -95,9 +95,10 @@ class SSFetcher(threading.Thread):
 class SSIterator(object):
     def __init__(self,
                  batch_size,
+                 config,
                  max_caption_length,
                  seed,
-                 use_infinite_loop=True,
+                 use_infinite_loop=False,
                  dtype="int32"):
 
         self.batch_size = batch_size

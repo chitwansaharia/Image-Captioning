@@ -48,6 +48,9 @@ def main(_):
 
     model_config = imp.load_source('config', 'config/config.py').config().image
 
+    file_train_config  = imp.load_source('config', 'config/config.py').config().train
+    file_valid_config  = imp.load_source('config', 'config/config.py').config().valid
+
     print("Config :")
     print(model_config)
     print("\n")
@@ -99,7 +102,9 @@ def main(_):
                 i += 1
                 # train_reader = Data_iter.get_train_iterator(dial_config)
                 # valid_reader = Data_iter.get_validation_iterator(dial_config)
-                iterator = SSIterator(model_config.batch_size,model_config.max_tokens_per_caption,1234)
+                iterator_train = SSIterator(model_config.batch_size,file_train_config,model_config.max_tokens_per_caption,1234)
+                iterator_valid = SSIterator(model_config.batch_size,file_valid_config,model_config.max_tokens_per_caption,1234)
+                
                 print("\nEpoch: %d" % (i))
                 main_model.run_epoch(session, reader = iterator, is_training=True, verbose=True)
 
