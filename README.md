@@ -4,10 +4,10 @@ Working on the analysis of state of the art Image Captioning Models using a pret
 
 ## Requirements
 
-Tensorflow
-MSCOCO Dataset (can be downloaded from http://mscoco.org/dataset/)
-pycocotools (clone from https://github.com/pdollar/coco)
-PIL
+* Tensorflow
+* MSCOCO Dataset (can be downloaded from http://mscoco.org/dataset/)
+* pycocotools (clone from https://github.com/pdollar/coco)
+* PIL
 
 ## Processing Image
 
