@@ -52,9 +52,7 @@ def main(_):
         main_model = image_captioning_sampler.ImageCaptioning(model_config)
 
         sv = tf.train.Supervisor( logdir=log_path, init_feed_dict=main_model.init_feed_dict())
-        pdb.set_trace()
         with sv.managed_session() as session:
-                print("hello")
                 main_model.sample(session, image,vocabulary, is_training=False, verbose=True)
 
 

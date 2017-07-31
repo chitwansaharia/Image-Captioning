@@ -34,8 +34,6 @@ class ImageCaptioning(object):
 
         with tf.variable_scope(self.scope):
             self.build_model()
-            # self.compute_loss_and_metrics()
-            # self.compute_gradients_and_train_op()
 
     def create_placeholders(self):
         batch_size = self.config.batch_size
@@ -104,7 +102,7 @@ class ImageCaptioning(object):
         with tf.variable_scope("decoder_lstm", initializer=rand_uni_initializer):
             (cell_output, state) = decoder_cell([decoder_inputs[:,0,:]], state)
             self.decoder_outputs.append(cell_output)
-
+        self.metrics["final_state"] = state
         
 
         full_conn_layers = [tf.reshape(tf.concat(axis=1, values=self.decoder_outputs), [-1, decoder_units])]
@@ -123,30 +121,6 @@ class ImageCaptioning(object):
             self.metrics["model_prob"] = tf.nn.softmax(self.model_logits)
 
 
-
-    
-    # def compute_loss_and_metrics(self):
-    #     entropy_loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example(
-    #         [self.model_logits],
-    #         [tf.reshape(self.y, [-1])],
-    #         [tf.reshape(self.wts, [-1])],
-    #         average_across_timesteps=False)
-    #     # # # pdb.set_trace()
-    #     self.metrics["loss"] = tf.reduce_sum(entropy_loss)
-
-    # def compute_gradients_and_train_op(self):
-    #     tvars = self.tvars = my_lib.get_scope_var(self.scope)
-    #     my_lib.get_num_params(tvars)
-    #     grads = tf.gradients(self.metrics["loss"], tvars)
-    #     grads, _ = tf.clip_by_global_norm(grads, self.config.max_grad_norm)
-
-    #     self.metrics["grad_sum"] = tf.add_n([tf.reduce_sum(g) for g in grads])
-
-    #     optimizer = tf.train.AdamOptimizer(learning_rate = self.config.learning_rate)
-    #     self.train_op = optimizer.apply_gradients(
-    #         zip(grads, tvars),
-    #         global_step=self.global_step)
-
     def model_vars(self):
         return self.tvars
 
@@ -159,7 +133,9 @@ class ImageCaptioning(object):
         epoch_metrics = {}
         keep_prob = 1.0
         fetches = {
-                    "model_prob" : self.metrics["model_prob"]
+                    "model_prob" : self.metrics["model_prob"],
+                    "final_state" : self.metrics["final_state"]
+
         }
         phase_train = 1.0
 
@@ -169,50 +145,27 @@ class ImageCaptioning(object):
         
         feed_dict = {}
         feed_dict[self.initial_state["decoder_state"]] = final_vgg_state
-        start_token = np.zeros((1,1),dtype=np.int)
-        start_token[0,0] = vocabulary['START_TOKEN']
-        feed_dict[self.decoder_inputs] = start_token
+        token = np.zeros((1,1),dtype=np.int)
+        token[0,0] = vocabulary['START_TOKEN']
+        feed_dict[self.decoder_inputs.name] = token
+        feed_dict[self.keep_prob.name] = 1.0
         vals = session.run(fetches,feed_dict)
+        last_state = vals["final_state"]
 
         pdb.set_trace()
-        # while(vals["mo del_prob"])
+        while index_to_word[np.argmax(vals["model_prob"])] != 'STOP_TOKEN':
 
-        while batch != None:
 
-            session.run(self.inc)
             feed_dict = {}
-            feed_dict[self.y.name] = batch["caption_batch_y"]
-            feed_dict[self.wts.name] = batch["mask"]
-            feed_dict[self.decoder_inputs.name] = batch["caption_batch_x"]
-            feed_dict[self.keep_prob.name] = keep_prob
-            feed_dict[self.phase_train.name] = phase_train
-            feed_dict[self.conv_inputs.name] = batch['image_batch']
-            feed_dict[self.vgg_train.name] = True
-
-            # pdb.set_trace()
-
+            feed_dict[self.initial_state["decoder_state"]] = last_state
+            token[0,0] = np.argmax(vals["model_prob"])
+            feed_dict[self.decoder_inputs.name] =  token
+            feed_dict[self.keep_prob.name] = 1.0
             vals = session.run(fetches, feed_dict)
-            total_loss += vals["loss"]
-            grad_sum += vals["grad_sum"]
-            total_words += np.sum(batch["mask"]) * 1.0
+            last_state = vals["final_state"]
+            pdb.set_trace()
+            
 
-            i += 1
-
-            percent_complete = (i * 100.0) / self.config.num_iters
-            perplexity = np.exp(total_loss / total_words)
-
-            if verbose:
-                print(
-                    "% Complete :", round(percent_complete, 0),
-                    "Captioning Model : perplexity :", round(perplexity, 3),
-                    "loss :", round((total_loss / total_words), 3), \
-                    "words/sec :", round((total_words) / (time.time() - start_time), 0),
-                    "Gradient :", round(vals["grad_sum"],3))
-            batch = reader.next()
-
-        session.run(self.refresh)
-
-        epoch_metrics["loss"] = round(np.exp(total_loss / total_words), 3)
-        return epoch_metrics
+        
 
 
