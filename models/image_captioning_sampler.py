@@ -169,7 +169,9 @@ class ImageCaptioning(object):
         
         feed_dict = {}
         feed_dict[self.initial_state["decoder_state"]] = final_vgg_state
-        feed_dict[self.decoder_inputs] = vocabulary['START_TOKEN']
+        start_token = np.zeros((1,1),dtype=np.int)
+        start_token[0,0] = vocabulary['START_TOKEN']
+        feed_dict[self.decoder_inputs] = start_token
         vals = session.run(fetches,feed_dict)
 
         pdb.set_trace()
