@@ -37,15 +37,10 @@ python sampler.py --log_path="<log-path>"
 ```
 ## Results
 
-<p align="left">
-<img src="images/COCO_val2014_000000262148.jpg" alt="Image" height="40%" width="30%" />
+<p align="center">
+<img src="images/image.png" alt="Image"  />
 </p>
-A man riding a skateboard on top of a metal rail
 
-<p align="left">
-<img src="images/COCO_val2014_000000393372.jpg" alt="Image" height="40%" width="30%" />
-</p>
-A man wearing a tie and a bow tie
 
 
 
