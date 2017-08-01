@@ -38,7 +38,7 @@ python sampler.py --log_path="<log-path>"
 ## Results
 
 <p align="center">
-<img src="images/image.png" alt="Image"  />
+<img src="images/image1.png" alt="Image"  />
 </p>
 
 
