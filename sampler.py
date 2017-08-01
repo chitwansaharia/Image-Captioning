@@ -53,7 +53,8 @@ def main(_):
 
         sv = tf.train.Supervisor( logdir=log_path, init_feed_dict=main_model.init_feed_dict())
         with sv.managed_session() as session:
-                main_model.sample(session, image,vocabulary, is_training=False, verbose=True)
+                final_caption = main_model.sample(session, image,vocabulary, is_training=False, verbose=True)
+        print(' '.join(word for word in final_caption))
 
 
 if __name__ == "__main__":

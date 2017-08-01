@@ -129,7 +129,6 @@ class ImageCaptioning(object):
 
 
     def sample(self, session, image,vocabulary, is_training=False, verbose=False):
-        pdb.set_trace()
         epoch_metrics = {}
         keep_prob = 1.0
         fetches = {
@@ -151,8 +150,9 @@ class ImageCaptioning(object):
         feed_dict[self.keep_prob.name] = 1.0
         vals = session.run(fetches,feed_dict)
         last_state = vals["final_state"]
+        final_caption = ['START_TOKEN']
+        final_caption.append(index_to_word[np.argmax(vals["model_prob"])])
 
-        pdb.set_trace()
         while index_to_word[np.argmax(vals["model_prob"])] != 'STOP_TOKEN':
 
 
@@ -163,7 +163,10 @@ class ImageCaptioning(object):
             feed_dict[self.keep_prob.name] = 1.0
             vals = session.run(fetches, feed_dict)
             last_state = vals["final_state"]
-            pdb.set_trace()
+            final_caption.append(index_to_word[np.argmax(vals["model_prob"])])
+
+        return final_caption[1:-1]
+
             
 
         
