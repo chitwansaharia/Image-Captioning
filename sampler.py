@@ -34,9 +34,11 @@ annFile = '/data/lisatmp4/chitwan/mscoco/annotations/captions_val2014.json'
 coco = COCO(annFile)
 
 imgid_list = coco.getImgIds()
-image = coco.loadImgs(imgid_list[0])
+image = coco.loadImgs(imgid_list[100]) 
+print(image[0]['file_name'])
 
 image = utils.load_image(os.path.join('/data/lisatmp4/chitwan/mscoco/val2014_modified/',image[0]['file_name']))
+
 
 vocabulary = cPickle.load(open('/data/lisatmp4/chitwan/mscoco/caption_processed/vocabulary.pkl','r'))
 
