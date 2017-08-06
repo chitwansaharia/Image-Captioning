@@ -4,53 +4,39 @@ matplotlib.use('Agg')
 from pycocotools.coco import COCO
 import sys
 from PIL import Image
+import tensorflow as tf
+import pdb
 
+flags = tf.flags
+logging = tf.logging
+
+flags.DEFINE_string("open_path",None,"The open file for images")
+flags.DEFINE_string("save_path",None,"the save path for the modified images")
+
+FLAGS = flags.FLAGS
+
+assert(FLAGS.open_path)
+assert(FLAGS.save_path)
+
+open_path = FLAGS.open_path
+save_path = FLAGS.save_path
+
+image_list = [file for file in os.listdir(open_path) if os.path.isfile(os.path.join(open_path,file))]
 
 final_size = 224,224
 
-if str(sys.argv[1]) == 'valid':
-	dataType = 'val2014'
-	open_path = '/data/lisatmp4/chitwan/mscoco/val2014'
-	save_path = '/data/lisatmp4/chitwan/mscoco/val2014_modified'
-	save_dir = 'val2014_modified'
-elif str(sys.argv[1]) == 'train':
-	dataType = 'train2014'
-	open_path = '/data/lisatmp4/chitwan/mscoco/train2014'
-	save_path = '/data/lisatmp4/chitwan/mscoco/train2014_modified'
-	save_dir = 'train2014_modified'
-elif str(sys.argv[1]) == 'newimage':
-	print("Hello")
-	image = Image.open('images/a.jpg')
-	new_image = Image.new('RGB',final_size)
-	image.thumbnail(final_size,Image.ANTIALIAS)
-	new_image.paste(image,(0,0))
-	new_image.save('images/a_new.jpg')
-	exit(0)
-else:
-	print("Bad Argument")
-	exit(0)
+if not os.path.exists(save_path):
+	os.makedirs(save_path)
 
-
-annFile = '/data/lisatmp4/chitwan/mscoco/annotations/captions_%s.json'%(dataType)
-
-coco = COCO(annFile)
-
-
-image_id_list = coco.getImgIds()
-
-image_dict = coco.loadImgs(image_id_list)
-
-
-os.makedirs(save_path)
-
-for image_dict_item in image_dict:
-	image_path = os.path.join(open_path,image_dict_item['file_name'])
+for image_list_item in image_list:
+	image_path = os.path.join(open_path,image_list_item)
 	image = Image.open(image_path)
 	img_size = image.size
 	new_image = Image.new('RGB',final_size)
 	image.thumbnail(final_size,Image.ANTIALIAS)
 	new_image.paste(image,(0,0))
-	new_image.save(os.path.join(save_path,image_dict_item['file_name']))
+	new_image.save(os.path.join(save_path,image_list_item))
+	pdb.set_trace()
 
 
 
