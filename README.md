@@ -11,12 +11,15 @@ Working on the analysis of state of the art Image Captioning Models using a pret
 
 ## Processing Image
 
-The MSCOCO images are of varying dimensions. To use the pretrained VGG-19 net we need to reshape the image to the input to the input shape of VGG net (224x224x3). 
+The images can be of varying dimensions. To use the pretrained VGG-19 net we need to reshape the image to the input to the input shape of VGG net (224x224x3). 
 For this, we reshape while maintaining the aspect ratio of images. (Padding image if necessary)
-Use the following for saving the processed image in the required directory (the input and the oputput files can be changed inside the code)
+Use the following for saving the processed image in the required directory.
 ``` bash 
-python image_process.py '<train/valid>'
+python image_process.py open_path='<source_directory>' save_path='<destination_directory>'
 ```
+After the script finishes, you will get the processed images in the destination directory with the same name as images in source directory.
+Both open_path and save_path fields are compulsary.
+
 ## Processing Captions
 
 The pycocotool assigns a caption id to each caption and each image has 5 captions. The text-process.py takes the captions (in the form of words through the pycocotool) and then builds a vocabulary (15000 tokens) and stores vocabulary and the index form captions in a pkl file (the path of the file can be changed in the code).
