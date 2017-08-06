@@ -21,11 +21,17 @@ After the script finishes, you will get the processed images in the destination 
 Both open_path and save_path fields are compulsary.
 
 ## Processing Captions
-
-The pycocotool assigns a caption id to each caption and each image has 5 captions. The text-process.py takes the captions (in the form of words through the pycocotool) and then builds a vocabulary (15000 tokens) and stores vocabulary and the index form captions in a pkl file (the path of the file can be changed in the code).
+The text-process.py code is customised for the mscoco caption format. You are free to make changes to the code if you want to train the model on other datasets. 
+### Processing Captions for MSCOCO
+The pycocotool assigns a caption id to each caption and each image has 5 captions. The text-process.py processes the captions by making a vocabulary (the size of the vocabulary can be changed using the vocab_size variable in the code  and stores vocabulary and the processed captions in the form of index tokens. The processed captions file stores a dictionary of the following form: {caption_id : [list of index tokens of the caption]}
 ``` bash 
-python text-process.py '<train/valid>'
+python text-process.py --annFile="<argument_1>" --save_path="<argument_2>" --make_vocabulary="<argument_3>" --vocab_path="<argument_4>" 
 ```
+* *argument_1* : The full address of the JSON format caption file of captions ( Can be downloaded from annotation section of http://mscoco.org/dataset/#download) 
+* *argument_2* : The directory path where you want to store the pkl file of processed captions. The name of the saved file will be **Processed_Captions.pkl**
+* *argument_3* : True if you want to make the vocabulary again. If already made the vocabulary once, then set this flag to False.
+* *argument_4* : If argument_3 = True, then it is the path where you want to store the newly built vocabulary. It will be saved by the name **Vocabulary.pkl**. If argument_4 = False, it is the path from where you want to access the vocabulary. 
+
 ## Training the model
 
 The model used for training model/image_captioning_model.py uses the pretrained VGG-net which is trainable through the vgg_train flag. It uses a LSTM decoder for caption generation. The configuration of the network can be changed from the config/config.py file. For running the model use the following command. (An example command has been give in script.sh).
