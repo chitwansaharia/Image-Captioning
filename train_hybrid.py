@@ -12,6 +12,7 @@ import tensorflow as tf
 import sys
 import os
 from models import image_captioning_model
+from models import image_captioning_with_attention
 # from data_readers import ptb, wiki
 from train_iter import *
 import imp
@@ -23,6 +24,7 @@ logging = tf.logging
 
 # flags.DEFINE_string("config", "1",
 #                     "config params for the model")
+flags.DEFINE_string("attention","True","Use attention or not")
 flags.DEFINE_string("save_path", None,
                     "base save path for the experiment")
 flags.DEFINE_string("eval_only", "False",
@@ -31,6 +33,7 @@ flags.DEFINE_string("log_path",None,"Log Directory path")
 
 
 FLAGS = flags.FLAGS
+use_attention = True
 
 
 # if FLAGS.config == '1':
@@ -40,13 +43,19 @@ FLAGS = flags.FLAGS
 # elif FLAGS.config == '3':
 #     model_config = imp.load_source('config', 'config/config.py').config().config_3
 
+if FLAGS.attention == "True":
+    use_attention = True
+elif FLAGS.attention == "False":
+    use_attention = False
 
 
 def main(_):
     # assert(FLAGS.save_path)
     # sent_config = imp.load_source('config', FLAGS.config).config().lm
-
-    model_config = imp.load_source('config', 'config/config.py').config().image
+    if use_attention:
+        model_config = imp.load_source('config', 'config/config.py').config().image_attn
+    else:
+        model_config = imp.load_source('config', 'config/config.py').config().image
 
     file_train_config  = imp.load_source('config', 'config/config.py').config().train
     file_valid_config  = imp.load_source('config', 'config/config.py').config().valid
@@ -59,7 +68,8 @@ def main(_):
     log_path = os.path.join(FLAGS.log_path,'hybrid_log')
 
     with tf.Graph().as_default():
-        main_model = eval(model_config.model)(model_config)
+        if use_attention:
+            main_model = eval(model_config.model)(model_config)
         # pdb.set_trace()
         # sent_model = eval(sent_config.model)(sent_config,None)
 

@@ -61,22 +61,22 @@ class Vgg19:
         self.conv4_2 = self.conv_layer(self.conv4_1, 512, 512, "conv4_2")
         self.conv4_3 = self.conv_layer(self.conv4_2, 512, 512, "conv4_3")
         self.conv4_4 = self.conv_layer(self.conv4_3, 512, 512, "conv4_4")
-        self.pool4 = self.max_pool(self.conv4_4, 'pool4')
+        # self.pool4 = self.max_pool(self.conv4_4, 'pool4')
 
-        self.conv5_1 = self.conv_layer(self.pool4, 512, 512, "conv5_1")
-        self.conv5_2 = self.conv_layer(self.conv5_1, 512, 512, "conv5_2")
-        self.conv5_3 = self.conv_layer(self.conv5_2, 512, 512, "conv5_3")
-        self.conv5_4 = self.conv_layer(self.conv5_3, 512, 512, "conv5_4")
-        self.pool5 = self.max_pool(self.conv5_4, 'pool5')
+        # self.conv5_1 = self.conv_layer(self.pool4, 512, 512, "conv5_1")
+        # self.conv5_2 = self.conv_layer(self.conv5_1, 512, 512, "conv5_2")
+        # self.conv5_3 = self.conv_layer(self.conv5_2, 512, 512, "conv5_3")
+        # self.conv5_4 = self.conv_layer(self.conv5_3, 512, 512, "conv5_4")
+        # self.pool5 = self.max_pool(self.conv5_4, 'pool5')
 
-        self.fc6 = self.fc_layer(self.pool5, 25088, 4096, "fc6")  # 25088 = ((224 // (2 ** 5)) ** 2) * 512
-        self.relu6 = tf.nn.relu(self.fc6)
-        if train_mode is not None:
-            self.relu6 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu6, self.dropout), lambda: self.relu6)
-        elif self.trainable:
-            self.relu6 = tf.nn.dropout(self.relu6, self.dropout)
+        # self.fc6 = self.fc_layer(self.pool5, 25088, 4096, "fc6")  # 25088 = ((224 // (2 ** 5)) ** 2) * 512
+        # self.relu6 = tf.nn.relu(self.fc6)
+        # if train_mode is not None:
+        #     self.relu6 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu6, self.dropout), lambda: self.relu6)
+        # elif self.trainable:
+        #     self.relu6 = tf.nn.dropout(self.relu6, self.dropout)
 
-        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7")
+        # self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7")
         # self.relu7 = tf.nn.relu(self.fc7)
         # if train_mode is not None:
         #     self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, self.dropout), lambda: self.relu7)

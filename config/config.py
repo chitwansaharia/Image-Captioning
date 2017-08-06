@@ -70,6 +70,7 @@ def image_caption_config():
     config.learning_rate = 0.0001
     config.num_iters = 414113/config.batch_size
     config.use_infinite_loop = False
+    config.save_path = 'Best'
     return config
 
 def train_file():
@@ -86,7 +87,11 @@ def valid_file():
     config.caption_file = '/data/lisatmp4/chitwan/mscoco/caption_processed/processed_captions_valid.pkl'
     return config
 
-
+def image_caption_config_attn():
+    config = image_caption_config()
+    config.model = "image_captioning_with_attention.ImageCaptioning"
+    config.decoder_units = 1024
+    return config    
 
 
 def config():
@@ -95,6 +100,7 @@ def config():
     config.image = image_caption_config()
     config.train = train_file()
     config.valid = valid_file()
+    config.image_attn = image_caption_config_attn()
     return config
 
 
